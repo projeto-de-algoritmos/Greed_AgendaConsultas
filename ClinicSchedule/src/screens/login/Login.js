@@ -8,7 +8,7 @@ import {authetication} from '../../api/firebase';
 const Login = ({navigation}) => {
 
   const [select, setSelect] = useState("Medico");
-  const { setUser } = useContext(LoginContext);
+  const { setUser, setTypeUser } = useContext(LoginContext);
 
   return (
     <Box h={'100%'} w={'100%'} bg="blue.50" safeArea>
@@ -29,6 +29,7 @@ const Login = ({navigation}) => {
             data.password, 
             () => {
               setUser(data.email);
+              setTypeUser(select);
             }, 
             (error) => console.log(error)
             )}}

@@ -1,30 +1,34 @@
 import React, { useContext, useEffect, useState } from "react";
-import {Box, Text, Fab, Icon, Modal, Button, HStack, Pressable, VStack, useToast} from 'native-base';
+import {Box, Text, Fab, Icon, Modal, Button, HStack, Pressable, VStack, useToast, ScrollView, Input} from 'native-base';
 import Calendar from "../components/calendar/calendar";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { post, get } from "../api/firebase";
+import { post, get, getSchedule, authetication } from "../api/firebase";
 import LoginContext from "../context/loginContext";
-
+import { formatDate } from "../utils/formatDate";
 
 const HomePaciente = () => {
 
-    const [modalVisible, setModalVisible] = useState(false);
+    const [modalVisibleStart, setModalVisibleStart] = useState(false);
+    const [modalVisibleEnd, setModalVisibleEnd] = useState(false);
+    const [modalVisibleTime, setModalVisibleTime] = useState(false);
     const [dates, setDates] = useState([]);
-    const [dateChoosed, setDateChoosed] = useState(new Date());
+    const [dateChoosedStart, setDateChoosedStart] = useState(new Date());
+    const [dateChoosedEnd, setDateChoosedEnd] = useState(new Date(1));
+    const [timeSchedule, setTimeSchedule] = useState(0);
+    const [schedule, setSchedule] = useState(null);
     const {user} = useContext(LoginContext);
 
-    console.log(dates)
+    const {setUser, setTypeUser} = useContext(LoginContext);
     const toast = useToast();
 
-    const toggleModal = () => setModalVisible(!modalVisible);
+    const toggleModal = () => setModalVisibleStart(!modalVisibleStart);
 
     const addDate = async () => {
-        const response = await post(user, dateChoosed);
+        const response = await post(user, formatDate(dateChoosedStart), formatDate(dateChoosedEnd), timeSchedule);
         toast.show({
             description: "Horário adicionado com sucesso"
           })
-        setList([...list, dateChoosed]);
-        console.log(response)
+        getDate();  
     };
 
     const getDate = async () => {
@@ -33,48 +37,148 @@ const HomePaciente = () => {
         return response;
     }
     
-    console.log(dateChoosed)
+    const getDateSchedule = async () => {
+        const response = await getSchedule(user);
+        console.log(response)
+        setSchedule(response);
+        return response;
+    }
+
     useEffect(() => {
-        getDate();        
+        getDate();
+        getDateSchedule();     
     }, []);
 
-    console.log(dates)
     return (
         <Box h="100%" w="100%" bg="blue.50">
-
+                <Button
+                    position={"absolute"}
+                    right="2"
+                    top={12}
+                    borderRadius="2xl"
+                    onPress={() =>
+                        authetication.logOut(() => {
+                        setUser("");
+                        setTypeUser("");
+                    })}
+                    >LogOut
+                </Button>
             <Box marginTop={10} marginX="10">
                 <Text color={"dark.300"} fontWeight={'bold'} letterSpacing="xl" fontSize="4xl" marginBottom={"1"}>Agenda</Text>
                 <Text color={"dark.300"}>Defina os dias e horarios </Text>
                 <Text color={"dark.300"}>que você está disponível para consulta</Text>
-                <VStack height={"full"} marginTop={10}>
-                    <Box >
-                        <Text color={"dark.300"} fontWeight={'bold'} fontSize="md">Horário Sugerido:</Text>
-                    </Box>
-                    <Box>
-                        <Text color={"dark.300"} fontWeight={'bold'} fontSize="md">Horários Marcado:</Text>
-                        {dates.map((data, key) => (
-                            <Text key={key}>{data}</Text>
-                        ))}
-                    </Box>
+                <VStack marginTop={10}>
+                    <Box h="45%">
+                    <HStack>
+                        <Text w="50%" color={"dark.300"} fontWeight={'bold'} fontSize="md">Horário Sugerido:</Text>        
+                        <Text color={"dark.300"} fontWeight={'bold'} fontSize="md">Tempo de Consulta:</Text>        
+                    </HStack>
+                        <ScrollView>
+                            {dates.map((data, key) => (
+                                <HStack key={key}>
+                                    <Box w="50%">
+                                        <HStack >
+                                            <Text marginY="2" >{data.dateStart}</Text>
+                                                <Text marginY="2">  até  </Text>
+                                            <Text marginY="2" >{data.dateEnd}</Text>
+                                        </HStack>
+                                    </Box>
+                                    <Box w="50%">
+                                        <Text textAlign={"center"} marginY="2" >{data.timeSchedule}</Text>
+                                    </Box>
+                                </HStack>
+                            ))}
+                        </ScrollView>
+                    </Box >
+                    <Box h={"45%"}>
+                        <Text color={"dark.300"} fontWeight={'bold'} fontSize="md">Horários Marcados:</Text>
+                        {schedule?.map((data, key) => (
+                                <HStack key={key}>
+                                    <Box w="50%">
+                                        <HStack >
+                                            <Text marginY="2" >{data.dateStart}</Text>
+                                                <Text marginY="2">  até  </Text>
+                                            <Text marginY="2" >{data.dateEnd}</Text>
+                                        </HStack>
+                                    </Box>
+                                </HStack>
+                            ))}
+                    </Box>  
                 </VStack>
 
 
-                <Modal isOpen={modalVisible} onClose={() => setModalVisible(false)}>
+                <Modal isOpen={modalVisibleStart} onClose={() => setModalVisibleStart(false)}>
                     <Modal.Content maxWidth="400px">
                     <Modal.CloseButton />
-                    <Modal.Header>Escolha a Melhor Data</Modal.Header>
+                    <Modal.Header>A Partir De:</Modal.Header>
                         <Modal.Body>
-                            <Calendar dateChoosed={dateChoosed} setDateChoosed={setDateChoosed}/>
+                            <Calendar dateChoosed={dateChoosedStart} setDateChoosed={setDateChoosedStart}/>
                         </Modal.Body>
                         <Modal.Footer>
                         <Button.Group space={2}>
                             <Button variant="ghost" colorScheme="blueGray" onPress={() => {
-                            setModalVisible(false);
+                            setModalVisibleStart(false);
                             }}>
                                 Cancelar
                             </Button>
                             <Button onPress={() => {
-                            setModalVisible(false);
+                            setModalVisibleStart(false);
+                            setModalVisibleEnd(true);
+                            }}>
+                                Salvar
+                            </Button>
+                        </Button.Group>
+                        </Modal.Footer>
+                    </Modal.Content>
+                </Modal>
+
+                <Modal isOpen={modalVisibleEnd} onClose={() => setDateChoosedEnd(false)}>
+                    <Modal.Content maxWidth="400px">
+                    <Modal.CloseButton />
+                    <Modal.Header>Até :</Modal.Header>
+                        <Modal.Body>
+                            <Calendar dateChoosed={dateChoosedEnd} setDateChoosed={setDateChoosedEnd}/>
+                        </Modal.Body>
+                        <Modal.Footer>
+                        <Button.Group space={2}>
+                            <Button variant="ghost" colorScheme="blueGray" onPress={() => {
+                            setModalVisibleStart(false);
+                            setModalVisibleEnd(false);
+                            }}>
+                                Cancelar
+                            </Button>
+                            <Button onPress={() => {
+                            setModalVisibleStart(false);
+                            setModalVisibleEnd(false);
+                            setModalVisibleTime(true)
+                            }}>
+                                Salvar
+                            </Button>
+                        </Button.Group>
+                        </Modal.Footer>
+                    </Modal.Content>
+                </Modal>
+
+                <Modal isOpen={modalVisibleTime} onClose={() => setModalVisibleTime(false)}>
+                    <Modal.Content maxWidth="400px">
+                    <Modal.CloseButton />
+                    <Modal.Header>Até :</Modal.Header>
+                        <Modal.Body>
+                            <Input value={timeSchedule} onChangeText={(value) => setTimeSchedule(value)}/>
+                        </Modal.Body>
+                        <Modal.Footer>
+                        <Button.Group space={2}>
+                            <Button variant="ghost" colorScheme="blueGray" onPress={() => {
+                            setModalVisibleStart(false);
+                            setModalVisibleEnd(false);
+                            setModalVisibleTime(false);
+                            }}>
+                                Cancelar
+                            </Button>
+                            <Button onPress={() => {
+                            setModalVisibleStart(false);
+                            setModalVisibleEnd(false);
+                            setModalVisibleTime(false);
                             addDate();
                             }}>
                                 Salvar

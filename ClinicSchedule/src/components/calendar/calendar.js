@@ -3,7 +3,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { View, Button, Text } from "native-base";
 
 const data = new Date();
-console.log(data)
+
 const Calendar = ({dateChoosed, setDateChoosed}) => {
     const [mode, setMode] = useState('date');
     const [show, setShow] = useState(false);

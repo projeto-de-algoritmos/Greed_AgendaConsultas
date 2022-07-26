@@ -8,7 +8,7 @@ import {authetication} from '../../api/firebase';
 const Register = ({navigation}) => {
 
   const [select, setSelect] = useState("Medico");
-  const { setUser } = useContext(LoginContext);
+  const { setUser, setTypeUser } = useContext(LoginContext);
 
   return (
     <Box h={'100%'} w={'100%'} bg="blue.50">
@@ -30,6 +30,7 @@ const Register = ({navigation}) => {
             data.password, 
             () => {
               setUser(data.email);
+              setTypeUser(select);
             }, 
             (error) => console.log(error)
             )}}
