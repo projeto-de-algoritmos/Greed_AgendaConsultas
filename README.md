@@ -22,7 +22,7 @@ O projeto consiste em um app para um consultório medico, onde os pacientes pode
 
 ![Print2](medias/Print2.jpeg)
 
-![Print3](medias/Print3.jpeg)
+![Print3](medias/print3.jpeg)
 
 ## Video de apresentação
 
