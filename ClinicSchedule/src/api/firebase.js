@@ -2,6 +2,7 @@
 import {initializeApp} from "firebase/app";
 import {getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut} from 'firebase/auth';
 import { getFirestore, addDoc, collection, getDocs  } from 'firebase/firestore'
+import { date } from "yup";
 import firebaseErrors from "./firebaseErros";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -45,18 +46,23 @@ const authetication = {
             }
         )
     },
-    logOut: () => {
-        signOut()
+    logOut: (finishSession) => {
+        console.log("jlokn")
+        console.log(finishSession)
+        finishSession?.();
+        // signOut();
     }
 }
 
 const db = getFirestore();
 
-async function post (user, date) {
+async function post (user, dateStart, dateEnd, timeSchedule) {
     try {
         const docRef = await addDoc(collection(db, "users"), {
-          user: user,
-          date: date,
+        user: user,
+        dateStart: dateStart,
+        dateEnd: dateEnd,
+        timeSchedule: timeSchedule
         });
         return docRef.id;
       } catch (e) {
@@ -64,15 +70,36 @@ async function post (user, date) {
       }
 }
 
+async function postSchedule (user, dateStart, dateEnd) {
+    try {
+        const docRef = await addDoc(collection(db, "agenda"), {
+        user: user,
+        dateStart: dateStart,
+        dateEnd: dateEnd,
+        });
+        return docRef.id;
+      } catch (e) {
+        return e;
+      }
+}
+
+async function getSchedule(user) {
+    const response = [];
+    const querySnapshot = await getDocs(collection(db, "agenda"));
+    querySnapshot.forEach((doc) => {
+        user ? (doc.data().user == user ? response.push(doc.data()): null) : response.push(doc.data());
+    });
+    return response;
+}
+
 async function get (user) {
     const response = [];
     const querySnapshot = await getDocs(collection(db, "users"));
     querySnapshot.forEach((doc) => {
-        console.log(user)
-        doc.data().user == user ? response.push(Date(doc.data().date)): null
+        user ? (doc.data().user == user ? response.push(doc.data()): null) : response.push(doc.data());
     });
     return response;
 }
 
 
-export {authetication, post, get};
+export {authetication, post, get, postSchedule, getSchedule};

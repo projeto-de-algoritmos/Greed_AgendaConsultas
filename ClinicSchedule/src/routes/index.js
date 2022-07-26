@@ -17,11 +17,11 @@ const AuthenticationTabStack = () => (
   </AuthenticationStack.Navigator>
 )
 
-const TabApp = ({user}) => {
+const TabApp = ({ typeUser}) => {
   return (
     <Tab.Navigator>
       {
-        user == "Medico" ?
+        typeUser == "Medico" ?
         <Tab.Screen name="HomeMedico" options={{ headerShown: false }} component={HomeMedico} />
         : <Tab.Screen name="HomePaciente" options={{ headerShown: false }} component={HomePaciente} />
       }
@@ -30,10 +30,10 @@ const TabApp = ({user}) => {
 }
 
 const Routes = () => {
-  const {user} = useContext(LoginContext);
+  const {user, typeUser} = useContext(LoginContext);
   return (
     <NavigationContainer>
-      {user ? <TabApp user={user}/> : <AuthenticationTabStack/>}
+      {user ? <TabApp typeUser={typeUser}/> : <AuthenticationTabStack/>}
     </NavigationContainer>
   )
 }
